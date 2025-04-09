@@ -5,9 +5,10 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-const io = require("socket.io")(4000, {
-    cors: { origin: "*" }
-  });
+const io = require("socket.io")(process.env.PORT || 4000, {
+  cors: { origin: "*" }
+});
+
   
   const userSocketMap = {};
   
