@@ -7,13 +7,11 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: { origin: "*" }
-});
-
+const io = socketIO(server, { cors: { origin: "*" } });
 const PORT = process.env.PORT || 4000;
 
 const userSocketMap = {};
+const GROUP_NAME = "Garba Ghela";
 
 app.get("/", (req, res) => {
   res.send("Socket.IO Server is running");
@@ -32,15 +30,20 @@ io.on("connection", (socket) => {
   socket.on("register", (username) => {
     userSocketMap[username] = socket.id;
     socket.username = username;
+    socket.join(GROUP_NAME);
     io.emit("user_online_status", getOnlineUsers());
   });
 
-  socket.on("private_message", ({ sender, receiver, message }) => {
-    const receiverSocket = userSocketMap[receiver];
-    if (receiverSocket) {
-      io.to(receiverSocket).emit("private_message", { sender, receiver, message });
+  socket.on("private_message", ({ sender, receiver, message, timestamp }) => {
+    if (receiver === "group") {
+      io.to(GROUP_NAME).emit("group_message", { sender, message, timestamp });
     } else {
-      io.to(socket.id).emit("error_message", { error: "User is offline." });
+      const receiverSocket = userSocketMap[receiver];
+      if (receiverSocket) {
+        io.to(receiverSocket).emit("private_message", { sender, receiver, message, timestamp });
+      } else {
+        io.to(socket.id).emit("error_message", { error: "User is offline." });
+      }
     }
   });
 
