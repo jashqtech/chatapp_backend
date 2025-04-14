@@ -40,7 +40,16 @@ io.on("connection", (socket) => {
     } else {
       const receiverSocket = userSocketMap[receiver];
       if (receiverSocket) {
-        io.to(receiverSocket).emit("private_message", { sender, receiver, message, timestamp });
+        io.to(receiverSocket).emit("private_message", {
+          sender,
+          receiver,
+          message,
+          timestamp
+        });
+        // Notify receiver of unread message
+        io.to(receiverSocket).emit("pending_message", {
+          from: sender
+        });
       } else {
         io.to(socket.id).emit("error_message", { error: "User is offline." });
       }
@@ -65,5 +74,4 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('hi')
 });
